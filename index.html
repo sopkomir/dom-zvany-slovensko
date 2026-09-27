@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dom zvaný Slovensko – interaktívny model štátu podľa Ústavy SR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,700&family=Public+Sans:wght@400;600;700&display=swap&subset=latin-ext" rel="stylesheet">
+<style>
+:root{
+  --sky:#DFE7EF; --sky2:#CFDAE5; --ink:#16233A; --muted:#4A5669; --paper:#FBFBF8; --stone:#E7E2D6; --stone-d:#CBC3B1;
+  --leg:#1C4FA0; --exe:#B42232; --jud:#5A3E7A; --ctl:#19706A; --sam:#4F7A2A; --earth:#3B3328; --grass:#7A9A4A;
+  --ok:#2E7D32; --bad:#B42232;
+  --serif:"Literata", Georgia, "Times New Roman", serif;
+  --sans:"Public Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --sky:#131A25; --sky2:#1B2433; --ink:#E8ECF2; --muted:#AAB4C3; --paper:#1F2937; --stone:#2A3444; --stone-d:#3E4A5C;
+    --leg:#7AA5F0; --exe:#EE707B; --jud:#B89DDC; --ctl:#55C4B9; --sam:#9BC96C; --earth:#0D0B09; --grass:#3F5A2A;
+  }
+}
+:root[data-theme="dark"]{
+  --sky:#131A25; --sky2:#1B2433; --ink:#E8ECF2; --muted:#AAB4C3; --paper:#1F2937; --stone:#2A3444; --stone-d:#3E4A5C;
+  --leg:#7AA5F0; --exe:#EE707B; --jud:#B89DDC; --ctl:#55C4B9; --sam:#9BC96C; --earth:#0D0B09; --grass:#3F5A2A;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;color:var(--ink);font:16px/1.55 var(--sans);background:var(--sky);
+  background-image:linear-gradient(var(--sky2) 1px,transparent 1px),linear-gradient(90deg,var(--sky2) 1px,transparent 1px);
+  background-size:32px 32px}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--leg);outline-offset:2px}
+
+/* illustrations */
+.ill{stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round;fill:none;display:block}
+.ill .f{fill:var(--c,var(--ink));fill-opacity:.28}
+.ill .s{fill:var(--c,var(--ink))}
+.ill .p{fill:var(--paper)}
+.ill .win{fill:var(--c,var(--ink));fill-opacity:.55;stroke:none}
+.ill .t{fill:currentColor;stroke:none;font:700 26px var(--serif)}
+.ill .grd{stroke-width:2.4}
+
+header{max-width:1760px;margin:0 auto;padding:26px 20px 10px;display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between}
+.brand{display:flex;gap:14px;align-items:center}
+.brand .ill{width:54px;height:54px;flex:none}
+h1{font:700 clamp(1.9rem,4vw,2.9rem)/1.02 var(--serif);margin:0;letter-spacing:-.01em}
+.sub{margin:6px 0 0;color:var(--muted);max-width:62ch}
+.modes{display:flex;border:2px solid var(--ink);border-radius:999px;overflow:hidden;background:var(--paper);flex-wrap:wrap}
+.modes button{border:0;background:none;padding:8px 16px;font-weight:600;cursor:pointer}
+.modes button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.fs{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--ink);background:var(--paper);border-radius:999px;padding:8px 14px;font-weight:600;cursor:pointer}
+.fs svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+:fullscreen body,body:fullscreen{overflow:auto}
+html:fullscreen{background:var(--sky);overflow:auto}
+@media (max-width:560px){.tools{width:100%}.fs{width:100%;justify-content:center;border-radius:10px}
+.modes{flex-wrap:nowrap;width:100%;border-radius:10px}.modes button{flex:1;padding:8px 6px;font-size:.9rem}.brand .ill{display:none}}
+
+.layout{max-width:1760px;margin:0 auto;padding:10px 20px 28px;display:grid;grid-template-columns:minmax(0,1fr) clamp(360px,26vw,440px);gap:24px;align-items:start}
+@media (max-width:1000px){.layout{grid-template-columns:1fr}}
+
+/* bars */
+.bar{background:var(--paper);border:2px solid var(--ink);border-radius:10px;padding:14px 16px;margin-bottom:16px;display:grid;gap:8px}
+.bar[hidden]{display:none}
+.btop{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:.9rem}
+.btext{font:700 1.2rem/1.3 var(--serif)}
+.bfeed{min-height:1.4em;font-weight:600}
+.bfeed.ok{color:var(--ok)} .bfeed.bad{color:var(--bad)}
+.bactions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:2px solid var(--ink);background:var(--ink);color:var(--paper);border-radius:6px;padding:6px 14px;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn:disabled{opacity:.35;cursor:default}
+.dots{display:flex;gap:6px;margin-left:auto}
+.dots button{width:12px;height:12px;border-radius:50%;border:2px solid var(--ink);background:transparent;padding:0;cursor:pointer}
+.dots button[aria-current="step"]{background:var(--ink)}
+
+/* the site */
+.stage{container-type:inline-size;background:linear-gradient(var(--sky) 0%, color-mix(in srgb,var(--sky) 70%, var(--paper)) 100%);border:1.5px solid var(--stone-d);border-radius:12px;overflow:hidden}
+.site{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"b b" "h a";gap:22px 18px;align-items:end;padding:22px 18px 0}
+.building{grid-area:b}.houses{grid-area:h}.annex{grid-area:a}
+@container (min-width:1040px){.site{grid-template-columns:190px minmax(0,1fr) 215px;grid-template-areas:"h b a"}.building{max-width:none}}
+@container (max-width:1039px){.building{width:min(100%,860px);justify-self:center}.foundation{border-bottom:6px solid var(--grass)}}
+@container (max-width:560px){.site{grid-template-columns:1fr;grid-template-areas:"b" "h" "a"}}
+
+.blk{display:block;width:100%;text-align:left;border:1.5px solid var(--stone-d);background:var(--paper);border-radius:4px;padding:8px 10px;cursor:pointer;
+  transition:opacity .2s, transform .15s, box-shadow .15s}
+.blk:hover{transform:translateY(-2px);box-shadow:0 4px 0 var(--stone-d)}
+.blk.ic{display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center}
+.blk.ic .ill{width:48px;height:32px}
+.blk{min-width:0;overflow-wrap:break-word}
+.blk .n{display:block;font-weight:700;line-height:1.25}
+.shaft .blk.ic{grid-template-columns:1fr;gap:4px}
+.shaft .blk.ic .ill{width:56px;height:37px}
+.blk .a{display:block;font-size:.8rem;color:var(--muted);line-height:1.3}
+.stage.has-sel .blk:not(.sel):not(.rel-out):not(.rel-in):not(.hl){opacity:.35}
+.blk.sel{outline:3px solid var(--ink);outline-offset:2px;box-shadow:0 5px 0 var(--ink)}
+.blk.rel-out,.blk.hl{outline:3px solid var(--ink);outline-offset:2px}
+.blk.rel-in{outline:3px dashed var(--ink);outline-offset:2px}
+.blk.hl{box-shadow:0 0 0 7px color-mix(in srgb,var(--c,var(--ink)) 30%, transparent)}
+.blk.pulse{animation:pulse .6s ease 2}
+.blk.right{outline:4px solid var(--ok)!important;opacity:1!important}
+.blk.wrong{animation:shake .35s ease;outline:4px solid var(--bad)!important}
+@keyframes pulse{50%{transform:scale(1.04)}}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* main building */
+.building{display:grid;justify-items:center;position:relative}
+.flagpole{width:3px;height:44px;background:var(--ink);position:relative;margin-bottom:-2px}
+.flagpole::after{content:"";position:absolute;left:3px;top:2px;width:40px;height:24px;
+  background:linear-gradient(#fff 0 33.3%,#0B4EA2 33.3% 66.6%,#EE1C25 66.6%);border:1px solid var(--ink);
+  transform-origin:left center;animation:wave 4s ease-in-out infinite}
+@keyframes wave{50%{transform:skewY(-4deg) scaleX(.94)}}
+.pediment{width:100%;display:block;border:0;background:none;padding:0;cursor:pointer}
+.pediment .tri{background:var(--ink);color:var(--paper);clip-path:polygon(50% 0,100% 100%,0 100%);padding:34px 25% 12px;text-align:center;display:grid;justify-items:center;gap:2px}
+.pediment .ill{width:42px;height:42px;color:var(--paper)}
+.pediment .n{font:700 clamp(1rem,2.2vw,1.35rem)/1.2 var(--serif);display:block}
+.pediment .a{font-size:.8rem;opacity:.85;color:var(--paper)}
+.pediment.blk{border:0;padding:0;background:none;text-align:center}
+.pediment.blk:hover{box-shadow:none}
+.frieze{width:100%;background:var(--ink);color:var(--paper);text-align:center;font:500 .95rem var(--serif);padding:6px 10px;border-top:3px double var(--paper)}
+.wings{width:94%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:0}
+@container (max-width:620px){.wings{grid-template-columns:1fr;width:100%}}
+.wing{display:flex;flex-direction:column;margin-top:10px}
+.cap{background:var(--c);color:#fff;padding:8px 10px;margin:0 -6px;border-radius:2px 2px 0 0;box-shadow:0 4px 0 color-mix(in srgb,var(--c) 60%, #000)}
+.cap h2{margin:0;font:700 1.05rem/1.2 var(--serif)}
+.cap p{margin:2px 0 0;font-size:.78rem;opacity:.9}
+.shaft{flex:1;background:repeating-linear-gradient(90deg,var(--stone) 0 13px,var(--stone-d) 13px 15px);border-inline:1.5px solid var(--stone-d);padding:12px 9px;display:grid;gap:8px;align-content:start}
+.shaft .blk{border-left:5px solid var(--c)}
+.base{height:10px;background:var(--stone-d);margin:0 -6px;border-radius:0 0 2px 2px}
+.plinth{width:100%;display:grid;margin-top:10px}
+.step{margin:0 auto;height:9px;background:var(--stone);border:1.5px solid var(--stone-d);border-bottom:0}
+.step.s1{width:96%}.step.s2{width:98%}
+.foundation{width:100%;background:var(--stone-d);padding:10px;display:grid;grid-template-columns:3fr 2fr;gap:10px}
+@container (max-width:620px){.foundation{grid-template-columns:1fr}}
+.foundation .blk{border-left:5px solid var(--ink);--c:var(--ink)}
+.foundation .ustava .n{font-family:var(--serif);font-size:1.08rem}
+
+/* houses */
+.houses{display:grid;gap:16px;align-content:end}
+.houses h3,.annex h3{margin:0;font:700 .95rem/1.25 var(--serif);color:var(--muted)}
+@container (max-width:560px){.houses{grid-template-columns:repeat(2,minmax(0,1fr))}.houses h3{grid-column:1/-1}}
+.house.blk{border:0;background:none;padding:0;--c:var(--sam)}
+.house.blk:hover{box-shadow:none}
+.house .roof{height:38px;background:var(--sam);clip-path:polygon(50% 0,100% 100%,0 100%);margin:0 -4px}
+.house .body{background:var(--paper);border:1.5px solid var(--stone-d);padding:8px 10px;display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:center}
+.house .ill{width:44px;height:30px}
+
+/* annex */
+.annex{background:var(--stone);border:1.5px solid var(--stone-d);border-top:8px solid var(--ctl);padding:10px;display:grid;gap:8px;--c:var(--ctl)}
+.annex .blk{border-left:5px solid var(--ctl)}
+
+.ground.blk{display:block;width:100%;border:0;border-radius:0;text-align:center;cursor:pointer;background:var(--earth);color:#F3EEE4;padding:0 16px 14px;border-top:6px solid var(--grass);--c:#C9B99A}
+.ground.blk:hover{box-shadow:none;transform:none}
+.ground .ill{width:min(360px,80%);height:54px;margin:0 auto;color:#E6DCC8}
+.ground .n{font:700 1.1rem var(--serif);display:block}
+.ground .a{font-size:.85rem;opacity:.85;display:block;color:#E6DCC8}
+.ground.blk.sel{box-shadow:inset 0 0 0 3px #F3EEE4;outline:none}
+
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.85rem;color:var(--muted);margin-top:10px;min-height:1.5em}
+.legend span::before{content:"";display:inline-block;width:22px;border-top:3px solid var(--ink);vertical-align:middle;margin-right:6px}
+.legend .in::before{border-top-style:dashed}
+
+/* panel */
+.panel{background:var(--paper);border:2px solid var(--ink);border-radius:10px;overflow:hidden;position:sticky;top:calc(12px + env(safe-area-inset-top,0px));max-height:calc(100vh - 24px);overflow-y:auto}
+@media (max-width:1000px){.panel{position:static;max-height:none}}
+.hero{background:color-mix(in srgb,var(--c,var(--ink)) 13%, var(--paper));border-bottom:2px solid var(--ink);padding:16px 20px 8px}
+.hero .ill{width:100%;height:auto;max-height:150px}
+.hero figcaption{font-size:.8rem;color:var(--muted);margin-top:4px}
+.pbody{padding:16px 20px 20px}
+.panel h2{font:700 1.45rem/1.2 var(--serif);margin:6px 0 4px}
+.tag{display:inline-block;font-size:.78rem;font-weight:700;color:#fff;background:var(--c,var(--ink));padding:2px 8px;border-radius:3px;margin-right:6px}
+.ref{font-size:.85rem;color:var(--muted)}
+.lead{font:500 1.02rem/1.6 var(--serif);margin:10px 0}
+.panel h3{font:700 .98rem var(--sans);margin:18px 0 6px;padding-bottom:4px;border-bottom:1.5px solid var(--stone-d)}
+dl{margin:0;display:grid;gap:8px}
+dt{font-size:.8rem;color:var(--muted);font-weight:600}
+dd{margin:0}
+.panel ul,.panel ol{margin:0;padding-left:1.2em;display:grid;gap:5px}
+.rels{list-style:none;padding:0!important}
+.rels li button{width:100%;text-align:left;background:none;border:1.5px solid var(--stone-d);border-radius:5px;padding:7px 9px;cursor:pointer}
+.rels li button:hover{border-color:var(--ink)}
+.steps li.cur{font-weight:700}
+.steps li button{background:none;border:0;padding:0;text-align:left;cursor:pointer;text-decoration:underline;text-decoration-color:var(--stone-d);text-underline-offset:3px}
+.note{font-size:.82rem;color:var(--muted);margin-top:18px}
+footer{max-width:1760px;margin:0 auto;padding:0 20px 28px;font-size:.85rem;color:var(--muted)}
+footer a{color:inherit}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <span data-ill="stat" data-c="var(--ink)"></span>
+    <div>
+      <h1>Dom zvaný Slovensko</h1>
+      <p class="sub">Interaktívny model štátu podľa Ústavy SR. Klikni na ktorúkoľvek časť stavby a zisti, čo robí, kto ju volí a s kým súvisí.</p>
+    </div>
+  </div>
+  <div class="tools">
+  <button class="fs" id="fsBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path id="fsIco" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><span id="fsTxt">Celá obrazovka</span></button>
+  <div class="modes" role="group" aria-label="Režim">
+    <button data-mode="explore" aria-pressed="true">Preskúmať</button>
+    <button data-mode="law" aria-pressed="false">Cesta zákona</button>
+    <button data-mode="quiz" aria-pressed="false">Otestuj sa</button>
+  </div>
+  </div>
+</header>
+
+<main class="layout">
+  <section aria-label="Model štátu">
+    <div class="bar" id="quizbar" hidden aria-live="polite">
+      <div class="btop"><span id="qProg"></span><span id="qScore"></span></div>
+      <div class="btext" id="qText"></div>
+      <div class="bfeed" id="qFeed"></div>
+      <div class="bactions"><button class="btn" id="qNext" hidden>Ďalšia otázka</button><button class="btn ghost" id="qReveal">Ukáž odpoveď</button><button class="btn" id="qAgain" hidden>Skúsiť znova</button></div>
+    </div>
+    <div class="bar" id="lawbar" hidden aria-live="polite">
+      <div class="btop"><span>Ako vzniká zákon</span><span id="lProg"></span></div>
+      <div class="btext" id="lTitle"></div>
+      <div id="lText"></div>
+      <div class="bactions"><button class="btn ghost" id="lPrev">Späť</button><button class="btn" id="lNext">Ďalší krok</button><div class="dots" id="lDots"></div></div>
+    </div>
+
+    <div class="stage" id="stage">
+      <div class="site">
+        <div class="houses">
+          <h3>Územná samospráva (Hlava 4)</h3>
+          <button class="blk house" data-id="obec"><div class="roof"></div><div class="body"><span data-ill="obec"></span><span><span class="n">Obec / mesto</span><span class="a">zastupiteľstvo a starosta</span></span></div></button>
+          <button class="blk house" data-id="vuc"><div class="roof"></div><div class="body"><span data-ill="vuc"></span><span><span class="n">Vyšší územný celok</span><span class="a">samosprávny kraj</span></span></div></button>
+        </div>
+
+        <div class="building">
+          <div class="flagpole" aria-hidden="true"></div>
+          <button class="blk pediment" data-id="stat"><div class="tri"><span data-ill="stat"></span><span class="n">Slovenská republika</span><span class="a">zvrchovaný, demokratický a právny štát</span></div></button>
+          <div class="frieze">Deľba moci: tri zložky, ktoré sa navzájom kontrolujú</div>
+          <div class="wings">
+            <div class="wing" style="--c:var(--leg)">
+              <div class="cap"><h2>Zákonodarná moc</h2><p>Hlava 5</p></div>
+              <div class="shaft">
+                <button class="blk ic" data-id="nrsr"><span data-ill="nrsr"></span><span><span class="n">Národná rada SR</span><span class="a">150 poslancov</span></span></button>
+                <button class="blk ic" data-id="referendum"><span data-ill="referendum"></span><span><span class="n">Referendum</span><span class="a">občania rozhodujú priamo</span></span></button>
+              </div><div class="base"></div>
+            </div>
+            <div class="wing" style="--c:var(--exe)">
+              <div class="cap"><h2>Výkonná moc</h2><p>Hlava 6</p></div>
+              <div class="shaft">
+                <button class="blk ic" data-id="prezident"><span data-ill="prezident"></span><span><span class="n">Prezident SR</span><span class="a">hlava štátu</span></span></button>
+                <button class="blk ic" data-id="vlada"><span data-ill="vlada"></span><span><span class="n">Vláda SR</span><span class="a">predseda vlády a ministri</span></span></button>
+                <button class="blk ic" data-id="sprava"><span data-ill="sprava"></span><span><span class="n">Ministerstvá a štátna správa</span><span class="a">zriaďuje ich zákon</span></span></button>
+              </div><div class="base"></div>
+            </div>
+            <div class="wing" style="--c:var(--jud)">
+              <div class="cap"><h2>Súdna moc</h2><p>Hlava 7</p></div>
+              <div class="shaft">
+                <button class="blk ic" data-id="us"><span data-ill="us"></span><span><span class="n">Ústavný súd SR</span><span class="a">ochranca ústavnosti</span></span></button>
+                <button class="blk ic" data-id="sudnarada"><span data-ill="sudnarada"></span><span><span class="n">Súdna rada SR</span><span class="a">navrhuje sudcov</span></span></button>
+                <button class="blk ic" data-id="sudy"><span data-ill="sudy"></span><span><span class="n">Súdy</span><span class="a">Najvyšší súd, Najvyšší správny súd a ďalšie</span></span></button>
+              </div><div class="base"></div>
+            </div>
+          </div>
+          <div class="plinth">
+            <div class="step s1"></div><div class="step s2"></div>
+            <div class="foundation">
+              <button class="blk ic ustava" data-id="ustava"><span data-ill="ustava"></span><span><span class="n">Ústava Slovenskej republiky</span><span class="a">základ, na ktorom stojí všetko ostatné</span></span></button>
+              <button class="blk ic" data-id="prava"><span data-ill="prava"></span><span><span class="n">Základné práva a slobody</span><span class="a">Hlava 2</span></span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="annex">
+          <h3>Nezávislé kontrolné a ochranné inštitúcie</h3>
+          <button class="blk ic" data-id="nku"><span data-ill="nku"></span><span><span class="n">Najvyšší kontrolný úrad</span><span class="a">kontrola verejných peňazí</span></span></button>
+          <button class="blk ic" data-id="prokuratura"><span data-ill="prokuratura"></span><span><span class="n">Prokuratúra SR</span><span class="a">generálny prokurátor</span></span></button>
+          <button class="blk ic" data-id="vop"><span data-ill="vop"></span><span><span class="n">Verejný ochranca práv</span><span class="a">ombudsman</span></span></button>
+          <button class="blk ic" data-id="nbs"><span data-ill="nbs"></span><span><span class="n">Národná banka Slovenska</span><span class="a">centrálna banka</span></span></button>
+        </div>
+      </div>
+      <button class="blk ground" data-id="obcania"><span data-ill="obcania"></span><span class="n">Občania</span><span class="a">Štátna moc pochádza od občanov (čl. 2)</span></button>
+    </div>
+    <div class="legend" id="legend" aria-hidden="true"></div>
+  </section>
+
+  <aside class="panel" id="panel" aria-live="polite"></aside>
+</main>
+
+<footer>Zjednodušený model na vyučovanie občianskej náuky, spracovaný podľa znenia Ústavy SR účinného od 1. 11. 2025. Ilustrácie sú štylizované. Plné a aktuálne znenie: <a href="https://www.slov-lex.sk/pravne-predpisy/SK/ZZ/1992/460/" target="_blank" rel="noopener">Ústava SR, zákon č. 460/1992 Zb. na Slov-Lex</a>.</footer>
+
+<script>
+/* ---------- illustrations ---------- */
+const W=(xs,ys,w=4,h=6)=>xs.flatMap(x=>ys.map(y=>`<rect class="win" x="${x}" y="${y}" width="${w}" height="${h}"/>`)).join('');
+const FLAG=(x,y)=>`<path d="M${x} ${y+16}V${y}"/><g stroke="none"><rect x="${x}" y="${y}" width="13" height="3" fill="#fff"/><rect x="${x}" y="${y+3}" width="13" height="3" fill="#0B4EA2"/><rect x="${x}" y="${y+6}" width="13" height="3" fill="#EE1C25"/></g><rect x="${x}" y="${y}" width="13" height="9" stroke-width=".8"/>`;
+const GROUND='<path class="grd" d="M2 72h116"/>';
+let uid=0;
+const ILL={
+ stat:()=>{const k='sh'+(uid++);return `<defs><clipPath id="${k}"><path d="M34 6H86V38Q86 64 60 76Q34 64 34 38Z"/></clipPath></defs>
+  <path d="M34 6H86V38Q86 64 60 76Q34 64 34 38Z" fill="#EE1C25"/>
+  <g clip-path="url(#${k})" stroke="none" fill="#0B4EA2"><circle cx="45" cy="72" r="12"/><circle cx="75" cy="72" r="12"/><circle cx="60" cy="64" r="13"/></g>
+  <g stroke="none" fill="#fff"><rect x="57.5" y="14" width="5" height="38"/><rect x="50" y="21" width="20" height="4.5"/><rect x="46" y="32" width="28" height="4.5"/></g>
+  <path d="M34 6H86V38Q86 64 60 76Q34 64 34 38Z"/>`},
+ nrsr:()=>`<path class="f" d="M38 34V18h44v16"/><path d="M31 34V9h9v25M80 34V9h9v25"/><path class="f" d="M31 9l4.5-5 4.5 5M80 9l4.5-5 4.5 5"/>${W([46,56,66],[22],4,5)}
+  <rect class="s" x="6" y="40" width="108" height="5"/><rect class="p" x="10" y="45" width="100" height="25"/>
+  <path d="${Array.from({length:12},(_,i)=>`M${16+i*8} 45v25`).join('')}"/>${FLAG(101,22)}${GROUND}`,
+ prezident:()=>`<path class="f" d="M10 36L20 25H100L110 36Z"/><rect class="p" x="12" y="36" width="96" height="34"/>
+  <path class="p" d="M46 70V32Q60 18 74 32V70"/>${W([18,28,38,78,88,98],[42,55])}${W([52,64],[38])}<path class="f" d="M55 70V61Q60 55 65 61V70"/>${FLAG(60,6)}${GROUND}`,
+ vlada:()=>`<path class="f" d="M4 40L10 33H38V40M116 40L110 33H82V40"/><rect class="p" x="6" y="40" width="32" height="30"/><rect class="p" x="82" y="40" width="32" height="30"/>
+  <rect class="p" x="38" y="28" width="44" height="42"/><path class="f" d="M34 28L60 12L86 28Z"/><circle class="p" cx="60" cy="22" r="3"/>
+  ${W([12,20,28,88,96,104],[46,57])}${W([44,52,64,72],[34,46])}<rect class="f" x="55" y="57" width="10" height="13"/>${GROUND}`,
+ sprava:()=>`<rect class="p" x="8" y="32" width="30" height="38"/><rect class="p" x="44" y="14" width="32" height="56"/><rect class="p" x="82" y="38" width="30" height="32"/>
+  <rect class="s" x="44" y="14" width="32" height="5"/>${W([13,21,29],[38,48,58],4,5)}${W([49,57,65],[24,34,44,54],6,5)}${W([87,95,103],[44,54],4,5)}${GROUND}`,
+ referendum:()=>`<path class="p" d="M48 6h26v32H48z"/><path d="M53 22l5 5 10-12"/><path class="f" d="M22 36h76v8H22z"/><rect class="p" x="26" y="44" width="68" height="26" rx="2"/><path stroke-width="4" d="M46 40h28"/><path d="M40 58h40"/>`,
+ us:()=>`<path class="f" d="M14 30L60 8L106 30Z"/><rect class="p" x="16" y="30" width="88" height="6"/>
+  <path stroke-width="3" d="${[24,38,52,68,82,96].map(x=>`M${x} 38v24`).join('')}"/><rect class="p" x="16" y="62" width="88" height="4"/><path d="M10 66h100M6 70h108"/><circle cx="60" cy="22" r="4"/>`,
+ sudnarada:()=>`<g transform="rotate(-35 44 30)"><rect class="s" x="26" y="20" width="34" height="14" rx="3"/><path stroke-width="4" d="M43 34v32"/></g><rect class="f" x="10" y="62" width="44" height="7" rx="2"/>
+  <circle class="p" cx="78" cy="26" r="6"/><circle class="p" cx="98" cy="26" r="6"/><circle class="p" cx="88" cy="40" r="7"/><path class="f" d="M68 46q10-14 20 0M88 46q10-14 20 0"/><path class="p" d="M76 68q12-20 24 0Z"/>`,
+ sudy:()=>`<circle class="s" cx="60" cy="9" r="3.5"/><path stroke-width="2.6" d="M60 12V66M22 22h76"/><path d="M42 70h36l-4-4H46z"/>
+  <path d="M22 22l-11 24M22 22l11 24M98 22l-11 24M98 22l11 24"/><path class="f" d="M9 46q13 14 26 0Z"/><path class="f" d="M85 46q13 14 26 0Z"/>`,
+ prokuratura:()=>`<path class="p" d="M26 8h44l10 10v54H26z"/><path d="M70 8v10h10"/><text class="t" x="34" y="44">§</text><path d="M54 30h18M54 38h18M34 54h40M34 62h26"/><circle class="f" cx="84" cy="58" r="12"/><path d="M84 50v16M76 58h16"/>`,
+ nku:()=>`<rect class="f" x="10" y="60" width="40" height="8" rx="4"/><rect class="f" x="12" y="51" width="40" height="8" rx="4"/><rect class="f" x="9" y="42" width="40" height="8" rx="4"/><rect class="f" x="13" y="33" width="40" height="8" rx="4"/>
+  <circle class="p" cx="76" cy="34" r="18" stroke-width="3"/><path d="M68 34h16M76 26v16" stroke-width="1.4"/><path stroke-width="7" d="M89 47L106 64"/>`,
+ vop:()=>`<path class="f" d="M60 6L92 16V38Q92 62 60 74Q28 62 28 38V16Z"/><circle class="p" cx="60" cy="30" r="7"/><path class="p" d="M45 58Q60 36 75 58Z"/>`,
+ nbs:()=>`<rect class="p" x="44" y="12" width="28" height="58"/><path d="M58 12V2"/>${W([49,55,61],[18,26,34,42,50,58],4,4)}<rect class="p" x="16" y="46" width="28" height="24"/>${W([21,29,37],[52,60],4,4)}
+  <circle class="f" cx="95" cy="50" r="15"/><text class="t" x="85" y="59" style="font-size:24px">€</text>${GROUND}`,
+ obec:()=>`<rect class="p" x="12" y="34" width="18" height="36"/><path class="f" d="M12 34Q21 14 30 34Z"/><path d="M21 16V8M18 11h6"/><rect class="win" x="18" y="42" width="6" height="8"/>
+  <rect class="p" x="40" y="48" width="26" height="22"/><path class="f" d="M36 48L53 34L70 48Z"/><rect class="p" x="76" y="44" width="32" height="26"/><path class="f" d="M72 44L92 28L112 44Z"/>${W([45,57],[53])}${W([82,97],[50])}${GROUND}`,
+ vuc:()=>`<rect class="p" x="8" y="30" width="48" height="40"/><rect class="s" x="8" y="30" width="48" height="5"/><circle class="p" cx="32" cy="24" r="6"/><path d="M32 24v-3M32 24h3"/>${W([14,24,34,44],[40,52],5,6)}
+  <rect class="f" x="64" y="44" width="50" height="20" rx="4"/>${W([69,79,89,99],[48],7,6)}<circle class="p" cx="74" cy="66" r="4"/><circle class="p" cx="104" cy="66" r="4"/>${GROUND}`,
+ obcania:()=>`${[[18,24],[40,18],[62,22],[84,16],[106,24]].map(([x,y])=>`<circle class="p" cx="${x}" cy="${y}" r="6"/><path class="f" d="M${x-10} ${y+30}Q${x} ${y+2} ${x+10} ${y+30}Z"/>`).join('')}<path class="p" d="M76 30h16v12H76z"/><path d="M80 36l3 3 6-6"/>`,
+ ustava:()=>`<path class="p" d="M60 16Q40 8 12 12V66Q40 62 60 70Z"/><path class="p" d="M60 16Q80 8 108 12V66Q80 62 60 70Z"/><path class="f" d="M60 16V70"/>
+  <text class="t" x="26" y="48">§</text><path d="M70 24h28M70 32h28M70 40h28M70 48h20"/>`,
+ prava:()=>`<circle class="f" cx="60" cy="40" r="34" stroke="none"/>${[[30,28],[60,22],[90,28]].map(([x,y])=>`<circle class="p" cx="${x}" cy="${y}" r="7"/><path class="p" d="M${x-10} ${y+38}V${y+18}Q${x} ${y+8} ${x+10} ${y+18}V${y+38}Z"/>`).join('')}<path stroke-width="3" d="M40 50L50 46M70 46L80 50"/>`
+};
+function svg(id){return `<svg class="ill" viewBox="0 0 120 80" aria-hidden="true">${ILL[id]()}</svg>`}
+document.querySelectorAll('[data-ill]').forEach(el=>{el.outerHTML=svg(el.dataset.ill)});
+
+/* ---------- data (overené podľa znenia účinného od 1. 11. 2025) ---------- */
+const C={leg:'var(--leg)',exe:'var(--exe)',jud:'var(--jud)',ctl:'var(--ctl)',sam:'var(--sam)',base:'var(--ink)'};
+const D={
+ stat:{name:'Slovenská republika',short:'Slovenská republika',br:'Štát',c:'base',ref:'Hlava 1, čl. 1–10',cap:'Štátny znak Slovenskej republiky (čl. 9 ods. 1)',
+  lead:'Slovenská republika je zvrchovaný, demokratický a právny štát. Neviaže sa na nijakú ideológiu ani náboženstvo (čl. 1 ods. 1).',
+  facts:[['Hlavné mesto','Bratislava (čl. 10)'],['Štátny jazyk','slovenský jazyk (čl. 6)'],['Štátne symboly','štátny znak, štátna vlajka, štátna pečať a štátna hymna (čl. 8)'],['Štátny znak','na červenom ranogotickom štíte dvojitý strieborný kríž na strednom vŕšku modrého trojvršia (čl. 9)'],['Štátna hymna','prvé dve slohy piesne Nad Tatrou sa blýska (čl. 9)'],['Územie','jednotné a nedeliteľné; hranice možno meniť len ústavným zákonom (čl. 3)']],
+  does:['Uznáva a dodržiava všeobecné pravidlá medzinárodného práva, medzinárodné zmluvy, ktorými je viazaná, a ďalšie medzinárodné záväzky (čl. 1 ods. 2).','Štátne orgány môžu konať iba na základe ústavy, v jej medziach a v rozsahu a spôsobom, ktorý ustanoví zákon (čl. 2 ods. 2).','Každý môže konať, čo nie je zákonom zakázané, a nikoho nemožno nútiť, aby konal niečo, čo zákon neukladá (čl. 2 ods. 3).','O vstupe do štátneho zväzku s inými štátmi alebo o vystúpení z neho sa rozhodne ústavným zákonom, ktorý sa potvrdí referendom (čl. 7 ods. 1).','Výkon časti svojich práv môže preniesť na Európske spoločenstvá a Európsku úniu (čl. 7 ods. 2); zvrchovanosť si zachováva predovšetkým vo veciach národnej identity (čl. 7 ods. 6).']},
+ obcania:{name:'Občania',short:'Občania',br:'Zdroj štátnej moci',c:'base',ref:'čl. 2, 26–32',cap:'Z občanov vychádza štátna moc',
+  lead:'Štátna moc pochádza od občanov, ktorí ju vykonávajú prostredníctvom svojich volených zástupcov alebo priamo (čl. 2 ods. 1).',
+  facts:[['Volebné právo','všeobecné, rovné a priame, vykonáva sa tajným hlasovaním (čl. 30 ods. 3); vek na voľbu ustanovuje zákon – 18 rokov'],['Cudzinci s trvalým pobytom','môžu voliť a byť volení do orgánov samosprávy obcí a VÚC (čl. 30 ods. 1)'],['Referendum','zúčastniť sa ho môže každý občan, ktorý má právo voliť do NR SR (čl. 94)']],
+  does:['Volia poslancov NR SR a prezidenta (čl. 73, 101).','Rozhodujú v referende; petíciou 350 000 občanov môžu dosiahnuť jeho vyhlásenie (čl. 95).','Volia starostov, zastupiteľstvá, predsedov a zastupiteľstvá krajov (čl. 69).','Majú petičné právo (čl. 27) a právo zakladať politické strany a hnutia (čl. 29).','Majú právo postaviť sa na odpor proti každému, kto by odstraňoval demokratický poriadok, ak sú činnosť ústavných orgánov a zákonné prostriedky znemožnené (čl. 32).']},
+ ustava:{name:'Ústava Slovenskej republiky',short:'Ústava',br:'Základ stavby',c:'base',ref:'zákon č. 460/1992 Zb.',cap:'Základný zákon štátu',
+  lead:'Základný zákon štátu, s ktorým musia byť v súlade všetky ostatné predpisy (čl. 152 ods. 4). Slovenská národná rada ju prijala 1. septembra 1992, vyhlásená bola 1. októbra 1992 a v ten deň nadobudla účinnosť; niektoré ustanovenia až neskôr (čl. 156).',
+  facts:[['Zmena ústavy','súhlas aspoň 3/5 všetkých poslancov, teda najmenej 90 zo 150 (čl. 84 ods. 4)'],['Kto podáva jej záväzný výklad','Ústavný súd SR, ak je vec sporná (čl. 128)'],['Podpísali','Ivan Gašparovič a Vladimír Mečiar']],
+  doesTitle:'Z čoho sa skladá',ordered:true,
+  does:['Preambula','Hlava 1: Základné ustanovenia, štátne symboly, hlavné mesto','Hlava 2: Základné práva a slobody','Hlava 3: Hospodárstvo SR a Najvyšší kontrolný úrad','Hlava 4: Územná samospráva','Hlava 5: Zákonodarná moc (NR SR a referendum)','Hlava 6: Výkonná moc (prezident a vláda)','Hlava 7: Súdna moc (Ústavný súd a súdy)','Hlava 8: Prokuratúra SR a verejný ochranca práv','Hlava 9: Prechodné a záverečné ustanovenia']},
+ prava:{name:'Základné práva a slobody',short:'Základné práva',br:'Základ stavby',c:'base',ref:'Hlava 2, čl. 12–54',cap:'Práva patria každému rovnako',
+  lead:'Ľudia sú slobodní a rovní v dôstojnosti i v právach. Základné práva a slobody sú neodňateľné, nescudziteľné, nepremlčateľné a nezrušiteľné (čl. 12 ods. 1).',
+  facts:[['Komu sa zaručujú','všetkým bez ohľadu na pohlavie, rasu, farbu pleti, jazyk, vieru a náboženstvo, zmýšľanie, pôvod, národnosť, majetok, rod alebo iné postavenie (čl. 12 ods. 2)'],['Medze práv','možno upraviť za podmienok ustanovených ústavou len zákonom (čl. 13 ods. 2)']],
+  doesTitle:'Oddiely Hlavy 2',ordered:true,
+  does:['Všeobecné ustanovenia (čl. 12–13)','Základné ľudské práva a slobody (čl. 14–25)','Politické práva (čl. 26–32)','Práva národnostných menšín a etnických skupín (čl. 33–34)','Hospodárske, sociálne a kultúrne práva (čl. 35–43)','Právo na ochranu životného prostredia a kultúrneho dedičstva (čl. 44–45)','Právo na súdnu a inú právnu ochranu (čl. 46–50)','Spoločné ustanovenia k prvej a druhej hlave (čl. 51–54)']},
+ nrsr:{name:'Národná rada Slovenskej republiky',short:'NR SR',br:'Zákonodarná moc',c:'leg',ref:'Hlava 5, čl. 72–92',cap:'Budova NR SR pod Bratislavským hradom',
+  lead:'Jediný ústavodarný a zákonodarný orgán Slovenskej republiky (čl. 72).',
+  facts:[['Zloženie','150 poslancov volených na štyri roky (čl. 73 ods. 1)'],['Voľby','všeobecné, rovné, priame, tajné, podľa zásad pomerného zastúpenia; celé Slovensko je jeden volebný obvod (čl. 74)'],['Za poslanca možno zvoliť','občana s volebným právom, ktorý dosiahol 21 rokov a má trvalý pobyt na Slovensku (čl. 74 ods. 2)'],['Uznášaniaschopnosť','prítomná nadpolovičná väčšina všetkých poslancov (čl. 84 ods. 1)'],['Bežný zákon','súhlas nadpolovičnej väčšiny prítomných poslancov (čl. 84 ods. 2)'],['Zákon vrátený prezidentom, nedôvera vláde','nadpolovičná väčšina všetkých poslancov, teda aspoň 76 (čl. 84 ods. 3, čl. 88)'],['Ústava, ústavný zákon, skrátenie volebného obdobia','aspoň 3/5 všetkých poslancov, teda aspoň 90 (čl. 84 ods. 4)']],
+  does:['Uznáša sa na ústave, ústavných a ostatných zákonoch a kontroluje, ako sa dodržiavajú (čl. 86 a).','Zákonom zriaďuje ministerstvá a ostatné orgány štátnej správy (čl. 86 e).','Rokuje o programovom vyhlásení vlády, kontroluje jej činnosť a rokuje o dôvere vláde (čl. 86 f).','Schvaľuje štátny rozpočet a štátny záverečný účet (čl. 86 g).','Pred ratifikáciou vyslovuje súhlas s dôležitými medzinárodnými zmluvami (čl. 86 d).','Rozhoduje o návrhu na vyhlásenie referenda (čl. 86 c).','Uznáša sa o vypovedaní vojny, ak je SR napadnutá alebo to vyplýva zo zmlúv o spoločnej obrane (čl. 86 k).','Poslanci môžu interpelovať vládu a jej členov; odpoveď musia dostať do 30 dní (čl. 80).','Predseda NR SR vyhlasuje voľby do NR SR, voľbu prezidenta a voľby do orgánov samosprávy (čl. 89).']},
+ referendum:{name:'Referendum',short:'Referendum',br:'Priama demokracia',c:'leg',ref:'Hlava 5, 2. oddiel, čl. 93–100',cap:'Občania rozhodujú priamo hlasovaním',
+  lead:'Referendom sa potvrdí ústavný zákon o vstupe do štátneho zväzku s inými štátmi alebo o vystúpení z neho a môže sa ním rozhodnúť aj o iných dôležitých otázkach verejného záujmu (čl. 93).',
+  facts:[['Kto ho vyhlasuje','prezident, do 30 dní od prijatia petície alebo uznesenia (čl. 95 ods. 1)'],['Na základe čoho','petície aspoň 350 000 občanov alebo uznesenia NR SR (čl. 95 ods. 1)'],['Kedy je platné','ak sa zúčastní nadpolovičná väčšina oprávnených voličov a rozhodnutie prijme nadpolovičná väčšina účastníkov (čl. 98 ods. 1)']],
+  does:['Nemôže byť o základných právach a slobodách, daniach, odvodoch ani o štátnom rozpočte (čl. 93 ods. 3).','Prezident môže pred vyhlásením požiadať Ústavný súd, aby posúdil, či je predmet referenda v súlade s ústavou (čl. 95 ods. 2, čl. 125b).','Návrhy prijaté v referende vyhlási NR SR rovnako ako zákon (čl. 98 ods. 2).','Výsledok môže NR SR zmeniť alebo zrušiť ústavným zákonom až po uplynutí troch rokov (čl. 99).','Odvolanie prezidenta sa rieši osobitným ľudovým hlasovaním, ktoré vyhlasuje predseda NR SR (čl. 106).']},
+ prezident:{name:'Prezident Slovenskej republiky',short:'Prezident',br:'Výkonná moc',c:'exe',ref:'Hlava 6, 1. oddiel, čl. 101–107',cap:'Sídlo prezidenta: Grasalkovičov palác v Bratislave',
+  lead:'Hlava Slovenskej republiky. Reprezentuje štát navonok i dovnútra a svojím rozhodovaním zabezpečuje riadny chod ústavných orgánov (čl. 101 ods. 1).',
+  facts:[['Voľba','občania v priamych voľbách, tajným hlasovaním, na päť rokov (čl. 101 ods. 2)'],['Obmedzenie','najviac dve po sebe nasledujúce obdobia (čl. 103 ods. 2)'],['Kandidát','občan voliteľný za poslanca, ktorý v deň voľby dosiahol 40 rokov (čl. 103 ods. 1)'],['Kto navrhuje kandidáta','najmenej 15 poslancov alebo petícia podpísaná najmenej 15 000 občanmi (čl. 101 ods. 3)'],['Zvolený je','kto získa nadpolovičnú väčšinu platných hlasov oprávnených voličov, inak sa koná druhé kolo (čl. 101 ods. 4)']],
+  does:['Zastupuje SR navonok, dojednáva a ratifikuje medzinárodné zmluvy (čl. 102 a).','Vymenúva a odvoláva predsedu a ostatných členov vlády (čl. 102 g).','Podpisuje zákony a do 15 dní ich môže vrátiť NR SR s pripomienkami (čl. 102 f, o).','Vymenúva sudcov, sudcov Ústavného súdu, generálneho prokurátora a troch členov Súdnej rady (čl. 102 s, t).','Odpúšťa a zmierňuje tresty, udeľuje amnestiu (čl. 102 j).','Je hlavným veliteľom ozbrojených síl (čl. 102 k).','Vyhlasuje referendum (čl. 102 n).','Za podmienok podľa čl. 102 písm. e) môže rozpustiť NR SR, napríklad ak do šiestich mesiacov neschváli programové vyhlásenie vlády.','Podáva NR SR správy o stave republiky (čl. 102 p).']},
+ vlada:{name:'Vláda Slovenskej republiky',short:'Vláda',br:'Výkonná moc',c:'exe',ref:'Hlava 6, 2. oddiel, čl. 108–123',cap:'Úrad vlády SR sídli v Letnom arcibiskupskom paláci',
+  lead:'Vrcholný orgán výkonnej moci (čl. 108).',
+  facts:[['Zloženie','predseda, podpredsedovia a ministri (čl. 109)'],['Vznik','predsedu vymenúva prezident; na jeho návrh vymenuje aj ostatných členov a poverí ich riadením ministerstiev (čl. 110, 111)'],['Dôvera','do 30 dní po vymenovaní predstúpi pred NR SR, predloží program a požiada o dôveru (čl. 113)'],['Zodpovednosť','za výkon funkcie zodpovedá NR SR, ktorá jej môže kedykoľvek vysloviť nedôveru (čl. 114)'],['Uznesenie vlády','súhlas nadpolovičnej väčšiny všetkých členov (čl. 118)']],
+  does:['Rozhoduje v zbore o návrhoch zákonov a nariadeniach vlády (čl. 119 a, b).','Na vykonanie zákona a v jeho medziach vydáva nariadenia (čl. 120).','Rozhoduje o návrhu štátneho rozpočtu a štátneho záverečného účtu (čl. 119 e).','Rozhoduje o zásadných opatreniach hospodárskej a sociálnej politiky (čl. 119 d).','Môže spojiť hlasovanie o zákone s hlasovaním o dôvere (čl. 114 ods. 3).','Udeľuje amnestiu vo veciach priestupkov (čl. 121).','Vyhlasuje a končí núdzový stav (čl. 119 n).']},
+ sprava:{name:'Ministerstvá a štátna správa',short:'Štátna správa',br:'Výkonná moc',c:'exe',ref:'Hlava 6, čl. 122–123',cap:'Ministerstvá a úrady štátnej správy',
+  lead:'Ústredné orgány štátnej správy a miestne orgány štátnej správy sa zriaďujú zákonom (čl. 122).',
+  facts:[['Kto ich zriaďuje','NR SR zákonom (čl. 86 písm. e); ústava počet ministerstiev neurčuje'],['Kto ich vedie','ministri, ktorých prezident poverí riadením ministerstiev (čl. 111)'],['Predpisy','ak ich splnomocní zákon, môžu v jeho medziach vydávať všeobecne záväzné právne predpisy (čl. 123)']],
+  does:['Uskutočňujú politiku vlády v jednotlivých oblastiach, napríklad v školstve či zdravotníctve.','Miestne orgány štátnej správy vykonávajú štátnu správu v regiónoch.','Ich predpisy posudzuje Ústavný súd (čl. 125 ods. 1 b).']},
+ us:{name:'Ústavný súd Slovenskej republiky',short:'Ústavný súd',br:'Súdna moc',c:'jud',ref:'Hlava 7, 1. oddiel, čl. 124–140',cap:'Sídli v Košiciach (štylizovaná ilustrácia)',
+  lead:'Nezávislý súdny orgán ochrany ústavnosti (čl. 124).',
+  facts:[['Zloženie','13 sudcov (čl. 134 ods. 1)'],['Vznik','vymenúva ich prezident z dvojnásobného počtu kandidátov, ktorých navrhne NR SR (čl. 134 ods. 2)'],['Funkčné obdobie','12 rokov; tá istá osoba nemôže byť vymenovaná opakovane (čl. 134 ods. 3, 4)'],['Kandidát','aspoň 40 rokov, bezúhonnosť, právnické vzdelanie a najmenej 15 rokov právnej praxe (čl. 134 ods. 4)'],['Veková hranica','funkcia zaniká v mesiaci, keď sudca dosiahne 72 rokov (čl. 138 ods. 3)']],
+  does:['Rozhoduje o súlade zákonov a ďalších predpisov s ústavou (čl. 125).','Posudzuje súlad dojednaných medzinárodných zmlúv s ústavou pred ich ratifikáciou (čl. 125a).','Na návrh prezidenta posudzuje, či je predmet referenda v súlade s ústavou (čl. 125b).','Rozhoduje o sťažnostiach ľudí a firiem, ktorým boli porušené základné práva (čl. 127), aj o sťažnostiach samosprávy (čl. 127a).','Podáva výklad ústavy, ak je vec sporná (čl. 128).','Rozhoduje o ústavnosti a zákonnosti volieb prezidenta, do NR SR a do Európskeho parlamentu (čl. 129 ods. 2).','Rozhoduje o obžalobe NR SR proti prezidentovi (čl. 129 ods. 5).']},
+ sudnarada:{name:'Súdna rada Slovenskej republiky',short:'Súdna rada',br:'Súdna moc',c:'jud',ref:'Hlava 7, 2. oddiel, čl. 141a–141b',cap:'Ústavný orgán sudcovskej legitimity',
+  lead:'Ústavný orgán sudcovskej legitimity (čl. 141a ods. 1). Dohliada na to, kto sa stane sudcom a či spĺňa predpoklady sudcovskej spôsobilosti.',
+  facts:[['Zloženie','18 členov: 1 sudcu volia sudcovia Najvyššieho súdu a Najvyššieho správneho súdu, 8 sudcov volia sudcovia ostatných súdov, po 3 členoch volí NR SR, vymenúva prezident a vymenúva vláda (čl. 141a ods. 2)'],['Nesudcovia','členovia za NR SR, prezidenta a vládu nemôžu byť sudcami (čl. 141a ods. 3)'],['Funkčné obdobie','päť rokov, najviac dve po sebe nasledujúce obdobia (čl. 141a ods. 5)']],
+  does:['Predkladá prezidentovi návrhy kandidátov na vymenovanie sudcov a návrhy na ich odvolanie (čl. 141a ods. 6 c).','Navrhuje predsedov a podpredsedov Najvyššieho súdu a Najvyššieho správneho súdu (čl. 141a ods. 6 e).','Rozhoduje o pridelení a preložení sudcov (čl. 141a ods. 6 d).','Vyjadruje sa k návrhu rozpočtu súdov (čl. 141a ods. 6 g).','Vydáva zásady sudcovskej etiky (čl. 141a ods. 6 j).']},
+ sudy:{name:'Súdy Slovenskej republiky',short:'Súdy',br:'Súdna moc',c:'jud',ref:'Hlava 7, 2. oddiel, čl. 141–148',cap:'Váhy spravodlivosti',
+  lead:'Súdnictvo vykonávajú nezávislé a nestranné súdy, na všetkých stupňoch oddelene od iných štátnych orgánov (čl. 141).',
+  facts:[['Sústava','Najvyšší súd SR, Najvyšší správny súd SR a ostatné súdy (čl. 143)'],['Sudcovia','vymenúva a odvoláva ich prezident na návrh Súdnej rady, bez časového obmedzenia (čl. 145 ods. 1)'],['Predpoklady','voliteľnosť do NR SR, vek aspoň 30 rokov, právnické vzdelanie (čl. 145 ods. 2)'],['Veková hranica','funkcia zaniká v mesiaci, keď sudca dosiahne 67 rokov (čl. 146 ods. 2)'],['Pri rozhodovaní','sú sudcovia nezávislí a viazaní ústavou, ústavným zákonom, medzinárodnou zmluvou a zákonom (čl. 144)']],
+  does:['Rozhodujú v občianskoprávnych a trestnoprávnych veciach a preskúmavajú zákonnosť rozhodnutí verejnej správy (čl. 142 ods. 1).','Najvyšší správny súd rozhoduje o voľbách do samosprávy, o rozpustení politickej strany a o disciplinárnej zodpovednosti sudcov a prokurátorov (čl. 142 ods. 2).','Rozsudky vyhlasujú v mene Slovenskej republiky a vždy verejne (čl. 142 ods. 4).','Len súd rozhoduje o vine a treste za trestné činy (čl. 50).']},
+ prokuratura:{name:'Prokuratúra Slovenskej republiky',short:'Prokuratúra',br:'Nezávislé inštitúcie',c:'ctl',ref:'Hlava 8, 1. oddiel, čl. 149–151',cap:'Ochrana práv a zákonnosti',
+  lead:'Chráni práva a zákonom chránené záujmy fyzických a právnických osôb a štátu (čl. 149).',
+  facts:[['Na čele','generálny prokurátor (čl. 150)'],['Vymenovanie','vymenúva a odvoláva ho prezident na návrh NR SR (čl. 150); funkčné obdobie a podrobnosti ustanovuje zákon o prokuratúre (čl. 151)']],
+  does:['V trestnom konaní podáva obžaloby na súd (zákon o prokuratúre).','Dozerá na dodržiavanie zákonnosti orgánmi verejnej správy (zákon o prokuratúre).','Generálny prokurátor môže podať návrh na začatie konania pred Ústavným súdom (čl. 130 ods. 1 f).']},
+ nku:{name:'Najvyšší kontrolný úrad Slovenskej republiky',short:'NKÚ',br:'Nezávislé inštitúcie',c:'ctl',ref:'Hlava 3, 2. oddiel, čl. 60–63',cap:'Kontrola hospodárenia s verejnými peniazmi',
+  lead:'Nezávislý orgán kontroly hospodárenia s rozpočtovými prostriedkami a s majetkom štátu, obcí, vyšších územných celkov a ďalších verejných inštitúcií (čl. 60).',
+  facts:[['Vedenie','predseda a podpredsedovia, ktorých volí a odvoláva NR SR (čl. 61 ods. 1)'],['Funkčné obdobie','sedem rokov, najviac dve po sebe nasledujúce obdobia (čl. 61 ods. 3)']],
+  does:['Kontroluje vládu, ministerstvá a ďalšie štátne orgány (čl. 60 ods. 2 a).','Kontroluje obce, vyššie územné celky a nimi zriadené organizácie (čl. 60 ods. 2 c).','Najmenej raz ročne predkladá NR SR správy o výsledkoch kontrol (čl. 62).','Spory o jeho kontrolnú pôsobnosť rozhoduje Ústavný súd (čl. 126 ods. 2).']},
+ vop:{name:'Verejný ochranca práv',short:'Ombudsman',br:'Nezávislé inštitúcie',c:'ctl',ref:'Hlava 8, 2. oddiel, čl. 151a',cap:'Ochrana ľudí pred nezákonným postupom úradov',
+  lead:'Nezávislý orgán, ktorý chráni základné práva a slobody ľudí a firiem v konaní pred orgánmi verejnej správy a ďalšími orgánmi verejnej moci, ak konajú v rozpore s právnym poriadkom (čl. 151a ods. 1).',
+  facts:[['Voľba','volí ho NR SR na päť rokov z kandidátov, ktorých navrhne najmenej 15 poslancov (čl. 151a ods. 3)'],['Kandidát','občan voliteľný za poslanca, ktorý dosiahol 35 rokov; nemôže byť členom politickej strany (čl. 151a ods. 3)']],
+  does:['Chráni ľudí pred nezákonným konaním, rozhodovaním alebo nečinnosťou úradov (čl. 151a ods. 1).','Môže sa podieľať na uplatnení zodpovednosti úradníkov, ktorí porušili základné práva (čl. 151a ods. 1).','Môže podať návrh Ústavnému súdu, ak predpis porušuje základné práva (čl. 151a ods. 2).','Všetky orgány verejnej moci mu musia poskytnúť súčinnosť (čl. 151a ods. 1).']},
+ nbs:{name:'Národná banka Slovenska',short:'NBS',br:'Nezávislé inštitúcie',c:'ctl',ref:'Hlava 3, 1. oddiel, čl. 56',cap:'Sídlo NBS je výšková budova v Bratislave',
+  lead:'Nezávislá centrálna banka Slovenskej republiky (čl. 56 ods. 1).',
+  facts:[['Najvyšší riadiaci orgán','Banková rada NBS (čl. 56 ods. 2)'],['Predpisy','môže vydávať všeobecne záväzné právne predpisy, ak ju na to splnomocní zákon (čl. 56 ods. 1)'],['Eurosystém','od prijatia eura v roku 2009 je jeho súčasťou (zákon o NBS)']],
+  does:['Spolu s ostatnými centrálnymi bankami eurozóny sa stará o cenovú stabilitu (zákon o NBS).','Dohliada na finančný trh, napríklad na banky a poisťovne (zákon o NBS).','Ústava zaručuje vydávanie hotovosti ako zákonného platidla (čl. 39a).']},
+ obec:{name:'Obec',short:'Obec',br:'Územná samospráva',c:'sam',ref:'Hlava 4, čl. 64–71',cap:'Základ územnej samosprávy',
+  lead:'Základom územnej samosprávy je obec (čl. 64). Je samostatným územným samosprávnym a správnym celkom, ktorý združuje ľudí s trvalým pobytom na jej území (čl. 64a).',
+  facts:[['Orgány','obecné zastupiteľstvo a starosta (čl. 69 ods. 1); názvy orgánov mesta upravuje zákon, napr. primátor (čl. 70)'],['Voľba','obyvatelia s trvalým pobytom v priamych voľbách na štyri roky (čl. 69 ods. 2, 3)'],['Starosta','výkonný orgán obce; vykonáva správu obce a zastupuje ju navonok (čl. 69 ods. 3)'],['Postavenie','právnická osoba, samostatne hospodári s vlastným majetkom a financiami (čl. 65)']],
+  does:['Vydáva všeobecne záväzné nariadenia (čl. 68).','Samospráva sa uskutočňuje aj na zhromaždeniach obyvateľov a miestnym referendom (čl. 67 ods. 1).','Stará sa o miestne záležitosti, napríklad miestne cesty, odpad či materské a základné školy (zákon o obecnom zriadení).','Povinnosti jej možno ukladať len zákonom a štát do jej činnosti môže zasahovať len spôsobom ustanoveným zákonom (čl. 67 ods. 2, 3).','Zákonom na ňu možno preniesť výkon úloh miestnej štátnej správy; náklady uhrádza štát (čl. 71).']},
+ vuc:{name:'Vyšší územný celok',short:'VÚC',br:'Územná samospráva',c:'sam',ref:'Hlava 4, čl. 64–71',cap:'Samosprávny kraj',
+  lead:'Samostatný územný samosprávny a správny celok, ktorý združuje ľudí s trvalým pobytom na jeho území (čl. 64a). Zákon zriadil osem samosprávnych krajov.',
+  facts:[['Orgány','zastupiteľstvo VÚC a predseda VÚC (čl. 69 ods. 4)'],['Voľba','obyvatelia s trvalým pobytom v kraji v priamych voľbách na štyri roky (čl. 69 ods. 5, 6)'],['Predseda','výkonný orgán; vykonáva správu kraja a zastupuje ho navonok (čl. 69 ods. 6)']],
+  does:['Vydáva všeobecne záväzné nariadenia (čl. 68).','Stará sa o regionálne záležitosti, napríklad stredné školy, cesty II. a III. triedy či regionálnu dopravu (zákon o samosprávnych krajoch).','Obyvatelia môžu rozhodovať v referende na území kraja (čl. 67 ods. 1).','Zákonom naň možno preniesť výkon úloh miestnej štátnej správy (čl. 71).']}
+};
+
+/* from, to, what "from" does */
+const E=[
+ ['obcania','nrsr','volia 150 poslancov (čl. 73, 74)'],
+ ['obcania','prezident','volia prezidenta v priamej voľbe (čl. 101)'],
+ ['obcania','referendum','rozhodujú v ňom; 350 000 podpisov môže iniciovať jeho vyhlásenie (čl. 95)'],
+ ['obcania','obec','volia starostu a zastupiteľstvo (čl. 69)'],
+ ['obcania','vuc','volia predsedu a zastupiteľstvo kraja (čl. 69)'],
+ ['ustava','stat','vymedzuje štát, jeho symboly a orgány'],
+ ['ustava','prava','zaručuje základné práva a slobody (Hlava 2)'],
+ ['prezident','vlada','vymenúva a odvoláva predsedu a členov vlády (čl. 102, 110, 111)'],
+ ['prezident','nrsr','podpisuje zákony, môže ich vrátiť a za podmienok ústavy NR SR rozpustiť (čl. 102)'],
+ ['prezident','us','vymenúva sudcov z kandidátov NR SR (čl. 134)'],
+ ['prezident','sudy','vymenúva sudcov na návrh Súdnej rady (čl. 145)'],
+ ['prezident','sudnarada','vymenúva 3 členov (čl. 141a)'],
+ ['prezident','prokuratura','vymenúva generálneho prokurátora na návrh NR SR (čl. 150)'],
+ ['prezident','referendum','vyhlasuje referendum (čl. 95)'],
+ ['nrsr','vlada','vyslovuje jej dôveru a nedôveru; vláda jej zodpovedá (čl. 113, 114)'],
+ ['nrsr','sprava','zriaďuje zákonom ministerstvá (čl. 86 e)'],
+ ['nrsr','us','navrhuje dvojnásobok kandidátov na sudcov (čl. 134)'],
+ ['nrsr','nku','volí predsedu a podpredsedov (čl. 61)'],
+ ['nrsr','vop','volí verejného ochrancu práv (čl. 151a)'],
+ ['nrsr','prokuratura','navrhuje kandidáta na generálneho prokurátora (čl. 150)'],
+ ['nrsr','sudnarada','volí 3 členov (čl. 141a)'],
+ ['nrsr','referendum','môže sa uzniesť na vyhlásení referenda (čl. 95)'],
+ ['nrsr','prezident','3/5 väčšinou môže navrhnúť jeho odvolanie v ľudovom hlasovaní alebo podať naňho obžalobu na Ústavný súd (čl. 106, 107)'],
+ ['vlada','sprava','ministri riadia ministerstvá (čl. 111)'],
+ ['vlada','nrsr','predkladá návrhy zákonov a návrh štátneho rozpočtu (čl. 87, 119)'],
+ ['vlada','sudnarada','vymenúva 3 členov (čl. 119 m)'],
+ ['vlada','obec','riadi a kontroluje výkon štátnej správy prenesený na obce (čl. 71)'],
+ ['vlada','vuc','riadi a kontroluje výkon štátnej správy prenesený na kraje (čl. 71)'],
+ ['sudnarada','sudy','navrhuje kandidátov na sudcov (čl. 141a)'],
+ ['us','nrsr','posudzuje, či sú zákony v súlade s ústavou (čl. 125)'],
+ ['us','ustava','podáva výklad ústavy, ak je vec sporná (čl. 128)'],
+ ['us','prava','rozhoduje o sťažnostiach na porušenie základných práv (čl. 127)'],
+ ['us','obec','chráni samosprávu pred nezákonnými zásahmi (čl. 127a)'],
+ ['sudy','prava','poskytujú súdnu ochranu (čl. 46)'],
+ ['sudy','obec','Najvyšší správny súd rozhoduje o voľbách do samosprávy (čl. 142)'],
+ ['nku','sprava','kontroluje hospodárenie ministerstiev a štátnych orgánov (čl. 60)'],
+ ['nku','obec','kontroluje hospodárenie obcí (čl. 60)'],
+ ['nku','vuc','kontroluje hospodárenie krajov (čl. 60)'],
+ ['nku','nrsr','predkladá správy o výsledkoch kontrol (čl. 62)'],
+ ['vop','sprava','chráni práva ľudí voči orgánom verejnej správy (čl. 151a)'],
+ ['vop','prava','chráni základné práva a slobody (čl. 151a)'],
+ ['prokuratura','sudy','podáva obžaloby (zákon o prokuratúre)']
+];
+
+const LAW=[
+ {t:'Návrh zákona',x:'Návrh zákona môžu podať poslanci, výbory NR SR alebo vláda (čl. 87 ods. 1). Väčšinu návrhov pripravujú ministerstvá a schvaľuje ich vláda.',ids:['nrsr','vlada','sprava']},
+ {t:'Rokovanie a hlasovanie v NR SR',x:'NR SR je uznášaniaschopná, ak je prítomná nadpolovičná väčšina poslancov. Bežný zákon schváli nadpolovičná väčšina prítomných (čl. 84 ods. 1, 2). Ústavný zákon potrebuje aspoň 90 hlasov (čl. 84 ods. 4).',ids:['nrsr']},
+ {t:'Prezident zákon podpíše alebo vráti',x:'Prezident môže do 15 dní od doručenia vrátiť zákon NR SR s pripomienkami (čl. 102 ods. 1 písm. o).',ids:['prezident']},
+ {t:'Opätovné prerokovanie',x:'Ak prezident zákon vráti, NR SR ho prerokuje znova. Na jeho schválenie treba nadpolovičnú väčšinu všetkých poslancov, teda aspoň 76 hlasov. Potom sa zákon vyhlási aj bez podpisu prezidenta (čl. 84 ods. 3, čl. 87 ods. 2, 3).',ids:['nrsr','prezident']},
+ {t:'Tri podpisy',x:'Zákon podpisuje prezident, predseda NR SR a predseda vlády (čl. 87 ods. 3).',ids:['prezident','nrsr','vlada']},
+ {t:'Vyhlásenie v Zbierke zákonov',x:'Zákon nadobúda platnosť vyhlásením v Zbierke zákonov (čl. 87 ods. 4). Odvtedy platí pre všetkých.',ids:['obcania','stat']},
+ {t:'Kontrola ústavnosti',x:'Ak má napríklad pätina poslancov, prezident, vláda, súd, generálny prokurátor alebo ombudsman pochybnosti, Ústavný súd posúdi, či je zákon v súlade s ústavou. Nesúladné ustanovenia strácajú účinnosť (čl. 125, 130).',ids:['us','prokuratura','vop']}
+];
+
+const Q=[
+ ['Kto vymenúva predsedu vlády?','prezident'],
+ ['Ktorý orgán je jediným ústavodarným a zákonodarným orgánom Slovenskej republiky?','nrsr'],
+ ['Od koho podľa čl. 2 pochádza štátna moc?','obcania'],
+ ['Ktorý orgán je vrcholným orgánom výkonnej moci?','vlada'],
+ ['Kto rozhoduje o tom, či je zákon v súlade s ústavou?','us'],
+ ['Kto navrhuje prezidentovi kandidátov na sudcov?','sudnarada'],
+ ['Ak sa pod petíciu podpíše aspoň 350 000 občanov, čo musí prezident vyhlásiť?','referendum'],
+ ['Kto kontroluje, ako štát, obce a kraje hospodária s verejnými peniazmi?','nku'],
+ ['Na koho sa obrátiš, ak ti úrad verejnej správy porušil základné práva?','vop'],
+ ['Ktorej samosprávy orgánmi sú zastupiteľstvo a starosta?','obec'],
+ ['Čo možno zmeniť len hlasmi aspoň 90 poslancov?','ustava'],
+ ['Na čele ktorej inštitúcie stojí generálny prokurátor?','prokuratura'],
+ ['Kto rozhoduje o platnosti volieb do obecných zastupiteľstiev?','sudy'],
+ ['Ktorá inštitúcia je nezávislou centrálnou bankou?','nbs'],
+ ['Ktorá samospráva zriaďuje väčšinu stredných škôl?','vuc']
+];
+
+/* ---------- UI ---------- */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const stage=$('#stage'), panel=$('#panel'), legend=$('#legend');
+const blk=id=>document.querySelector(`.blk[data-id="${id}"]`);
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+let mode='explore';
+const narrow=()=>window.matchMedia('(max-width:1000px)').matches;
+
+function clearMarks(){$$('.blk').forEach(b=>b.classList.remove('sel','rel-out','rel-in','hl'));stage.classList.remove('has-sel');legend.innerHTML=''}
+
+function intro(){
+  clearMarks();
+  panel.innerHTML=`<figure class="hero" style="--c:var(--ink);margin:0">${svg('stat')}<figcaption>Štátny znak Slovenskej republiky</figcaption></figure><div class="pbody">
+  <h2>Ako čítať dom</h2>
+  <p class="lead">Štát si môžeš predstaviť ako budovu. Stojí na pôde, ktorou sú občania, a na pevnom základe, ktorým je ústava so základnými právami.</p>
+  <p>Tri stĺpy nesú tri zložky moci: zákonodarnú, výkonnú a súdnu. Sú oddelené, aby žiadna nemohla vládnuť sama. Vpravo stojí prístavba nezávislých kontrolných inštitúcií, vľavo domy samosprávy, ktoré si obce a kraje spravujú samy.</p>
+  <p>Klikni na ľubovoľnú časť. Uvidíš, čo robí, a na stavbe sa zvýraznia inštitúcie, s ktorými súvisí. V režime Cesta zákona prejdeš krok za krokom, ako vzniká zákon.</p></div>`;
+}
+
+function show(id){
+  const d=D[id];
+  clearMarks();
+  const out=E.filter(e=>e[0]===id), inn=E.filter(e=>e[1]===id);
+  stage.classList.add('has-sel');blk(id).classList.add('sel');
+  out.forEach(e=>blk(e[1]).classList.add('rel-out'));inn.forEach(e=>blk(e[0]).classList.add('rel-in'));
+  legend.innerHTML=(out.length?'<span>na koho pôsobí</span>':'')+(inn.length?'<span class="in">kto pôsobí naň</span>':'');
+  const list=(a,o)=>`<${o?'ol':'ul'}>${a.map(x=>`<li>${esc(x)}</li>`).join('')}</${o?'ol':'ul'}>`;
+  const rel=(a,dir)=>`<ul class="rels">${a.map(e=>{const o=dir==='out'?e[1]:e[0];
+    const txt=dir==='out'?`<b>${esc(D[o].short)}</b>: ${esc(d.short)} ${esc(e[2])}`:`<b>${esc(D[o].short)}</b> ${esc(e[2])}`;
+    return `<li><button data-go="${o}">${txt}</button></li>`}).join('')}</ul>`;
+  panel.innerHTML=`<figure class="hero" style="--c:${C[d.c]};margin:0">${svg(id)}<figcaption>${esc(d.cap)}</figcaption></figure><div class="pbody">
+   <span class="tag" style="--c:${C[d.c]}">${esc(d.br)}</span><span class="ref">${esc(d.ref)}</span>
+   <h2>${esc(d.name)}</h2><p class="lead">${esc(d.lead)}</p>
+   <h3>Základné údaje</h3><dl>${d.facts.map(f=>`<div><dt>${esc(f[0])}</dt><dd>${esc(f[1])}</dd></div>`).join('')}</dl>
+   <h3>${esc(d.doesTitle||'Čo robí')}</h3>${list(d.does,d.ordered)}
+   ${out.length?`<h3>Na koho pôsobí</h3>${rel(out,'out')}`:''}
+   ${inn.length?`<h3>Kto pôsobí naň</h3>${rel(inn,'in')}`:''}
+   <p class="note">Klávesou Esc zrušíš výber.</p></div>`;
+  panel.querySelectorAll('[data-go]').forEach(b=>{
+    b.onclick=()=>show(b.dataset.go);
+    b.onmouseenter=()=>{const t=blk(b.dataset.go);t.classList.remove('pulse');void t.offsetWidth;t.classList.add('pulse')};
+  });
+  panel.scrollTop=0;
+  if(narrow()&&mode==='explore')panel.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* law */
+let li=0;
+$('#lDots').innerHTML=LAW.map((s,i)=>`<button aria-label="Krok ${i+1}: ${s.t}"></button>`).join('');
+$$('#lDots button').forEach((b,i)=>b.onclick=()=>law(i));
+function law(i){
+  li=i;const s=LAW[i];clearMarks();stage.classList.add('has-sel');
+  s.ids.forEach(id=>{const b=blk(id);b.classList.add('hl')});
+  $('#lProg').textContent=`Krok ${i+1} zo ${LAW.length}`;$('#lTitle').textContent=s.t;$('#lText').textContent=s.x;
+  $('#lPrev').disabled=i===0;$('#lNext').textContent=i===LAW.length-1?'Začať odznova':'Ďalší krok';
+  $$('#lDots button').forEach((b,k)=>{if(k===i)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current')});
+  panel.innerHTML=`<figure class="hero" style="--c:var(--leg);margin:0">${svg('nrsr')}<figcaption>Zákony prijíma Národná rada SR</figcaption></figure><div class="pbody">
+   <span class="tag" style="--c:var(--leg)">Cesta zákona</span><span class="ref">čl. 84, 87, 102, 125</span><h2>Ako vzniká zákon</h2>
+   <ol class="steps">${LAW.map((s,k)=>`<li class="${k===i?'cur':''}"><button data-step="${k}">${esc(s.t)}</button></li>`).join('')}</ol>
+   <p class="note">Zvýraznené časti stavby sa podieľajú na aktuálnom kroku. Klikom na ne zobrazíš podrobnosti.</p></div>`;
+  panel.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>law(+b.dataset.step));
+}
+$('#lPrev').onclick=()=>law(Math.max(0,li-1));
+$('#lNext').onclick=()=>law(li===LAW.length-1?0:li+1);
+
+/* quiz */
+let qi=0,score=0,tries=0,answered=false,order=[];
+function startQuiz(){order=Q.map((q,i)=>i).sort(()=>Math.random()-.5).slice(0,10);qi=0;score=0;$('#qAgain').hidden=true;intro();askQ()}
+function askQ(){
+  tries=0;answered=false;$$('.blk').forEach(b=>b.classList.remove('right','wrong'));
+  $('#qProg').textContent=`Otázka ${qi+1} z ${order.length}`;$('#qScore').textContent=`Správne na prvý pokus: ${score}`;
+  $('#qText').textContent=Q[order[qi]][0];
+  const f=$('#qFeed');f.className='bfeed';f.textContent='Odpovedz kliknutím na správnu časť stavby.';
+  $('#qNext').hidden=true;$('#qReveal').hidden=false;
+  $('#qNext').textContent=qi===order.length-1?'Zobraziť výsledok':'Ďalšia otázka';
+}
+function answer(id){
+  const q=Q[order[qi]],f=$('#qFeed'),b=blk(id);
+  if(id===q[1]){answered=true;if(tries===0)score++;f.className='bfeed ok';f.textContent=`Správne: ${D[id].name}.`;
+    $('#qScore').textContent=`Správne na prvý pokus: ${score}`;finish(id);}
+  else{tries++;b.classList.remove('wrong');void b.offsetWidth;b.classList.add('wrong');f.className='bfeed bad';f.textContent=`${D[id].short} to nie je. Skús znova.`}
+}
+function finish(id){show(id);blk(id).classList.add('right');$('#qNext').hidden=false;$('#qReveal').hidden=true;$('#qNext').focus({preventScroll:true})}
+$('#qReveal').onclick=()=>{const id=Q[order[qi]][1];answered=true;tries++;const f=$('#qFeed');f.className='bfeed';f.textContent=`Správna odpoveď: ${D[id].name}.`;finish(id)};
+$('#qNext').onclick=()=>{
+  if(qi<order.length-1){qi++;askQ();return}
+  $$('.blk').forEach(b=>b.classList.remove('right','wrong'));intro();
+  $('#qText').textContent=`Hotovo. Na prvý pokus si zvládol(a) ${score} z ${order.length} otázok.`;
+  const f=$('#qFeed');f.className='bfeed';f.textContent=score>=8?'Výborne, stavbu štátu poznáš naozaj dobre.':'Pozri si inštitúcie, pri ktorých si váhal(a), a skús to znova.';
+  $('#qNext').hidden=true;$('#qReveal').hidden=true;$('#qAgain').hidden=false;
+};
+$('#qAgain').onclick=startQuiz;
+
+function setMode(m){
+  mode=m;$$('.modes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m));
+  $('#quizbar').hidden=m!=='quiz';$('#lawbar').hidden=m!=='law';
+  $$('.blk').forEach(b=>b.classList.remove('right','wrong'));
+  if(m==='quiz')startQuiz();else if(m==='law')law(0);else intro();
+}
+$$('.modes button').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+$$('.blk').forEach(b=>b.addEventListener('click',()=>{
+  const id=b.dataset.id;
+  if(mode==='quiz'&&!answered)answer(id);else show(id);
+}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(mode==='law')law(li);else if(mode==='explore')intro()}});
+/* fullscreen */
+const fsBtn=$('#fsBtn'),fsTxt=$('#fsTxt'),fsIco=$('#fsIco');
+const canFs=document.fullscreenEnabled||document.webkitFullscreenEnabled;
+const inFrame=(()=>{try{return window.self!==window.top}catch(e){return true}})();
+if(!canFs && !inFrame) fsBtn.hidden=true;
+if(!canFs && inFrame) fsTxt.textContent='Otvoriť v novom okne';
+fsBtn.onclick=()=>{
+  const el=document.documentElement;
+  if(document.fullscreenElement||document.webkitFullscreenElement){(document.exitFullscreen||document.webkitExitFullscreen).call(document);return}
+  if(canFs){(el.requestFullscreen||el.webkitRequestFullscreen).call(el)}
+  else window.open(location.href,'_blank','noopener');
+};
+const fsSync=()=>{const on=!!(document.fullscreenElement||document.webkitFullscreenElement);
+  fsTxt.textContent=on?'Zavrieť celú obrazovku':(canFs?'Celá obrazovka':'Otvoriť v novom okne');
+  fsIco.setAttribute('d',on?'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5':'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5')};
+document.addEventListener('fullscreenchange',fsSync);document.addEventListener('webkitfullscreenchange',fsSync);
+intro();
+</script>
+</body>
+</html>
