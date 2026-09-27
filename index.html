@@ -110,9 +110,7 @@ html:fullscreen{background:var(--sky);overflow:auto}
 /* main building */
 .building{display:grid;justify-items:center;position:relative}
 .flagpole{width:3px;height:44px;background:var(--ink);position:relative;margin-bottom:-2px}
-.flagpole::after{content:"";position:absolute;left:3px;top:2px;width:40px;height:24px;
-  background:linear-gradient(#fff 0 33.3%,#0B4EA2 33.3% 66.6%,#EE1C25 66.6%);border:1px solid var(--ink);
-  transform-origin:left center;animation:wave 4s ease-in-out infinite}
+.flagpole svg{position:absolute;left:3px;top:2px;width:42px;height:28px;transform-origin:left center;animation:wave 4s ease-in-out infinite;overflow:visible}
 @keyframes wave{50%{transform:skewY(-4deg) scaleX(.94)}}
 .pediment{width:100%;display:block;border:0;background:none;padding:0;cursor:pointer}
 .pediment .tri{background:var(--ink);color:var(--paper);clip-path:polygon(50% 0,100% 100%,0 100%);padding:34px 25% 12px;text-align:center;display:grid;justify-items:center;gap:2px}
@@ -292,7 +290,12 @@ footer a{color:inherit}
 <script>
 /* ---------- illustrations ---------- */
 const W=(xs,ys,w=4,h=6)=>xs.flatMap(x=>ys.map(y=>`<rect class="win" x="${x}" y="${y}" width="${w}" height="${h}"/>`)).join('');
-const FLAG=(x,y)=>`<path d="M${x} ${y+16}V${y}"/><g stroke="none"><rect x="${x}" y="${y}" width="13" height="3" fill="#fff"/><rect x="${x}" y="${y+3}" width="13" height="3" fill="#0B4EA2"/><rect x="${x}" y="${y+6}" width="13" height="3" fill="#EE1C25"/></g><rect x="${x}" y="${y}" width="13" height="9" stroke-width=".8"/>`;
+const FLAGBODY=`<rect width="45" height="10" fill="#fff" stroke="none"/><rect y="10" width="45" height="10" fill="#0B4EA2" stroke="none"/><rect y="20" width="45" height="10" fill="#EE1C25" stroke="none"/>
+<path d="M9 6.5H21V15Q21 21.2 15 23.8Q9 21.2 9 15Z" fill="#EE1C25" stroke="#fff" stroke-width="1.3"/>
+<path d="M10.1 19.2Q11.8 16.6 13.3 18.1Q15 15.1 16.7 18.1Q18.2 16.6 19.9 19.2Q18.4 21.8 15 23.1Q11.6 21.8 10.1 19.2Z" fill="#0B4EA2" stroke="none"/>
+<g fill="#fff" stroke="none"><rect x="14.3" y="8.6" width="1.4" height="8.8"/><rect x="12.7" y="10.3" width="4.6" height="1.2"/><rect x="11.7" y="13.1" width="6.6" height="1.3"/></g>
+<rect width="45" height="30" fill="none" stroke="#16233A" stroke-width="1"/>`;
+const FLAG=(x,y)=>`<path d="M${x} ${y+16}V${y}"/><svg x="${x}" y="${y}" width="13.5" height="9" viewBox="0 0 45 30">${FLAGBODY}</svg>`;
 const GROUND='<path class="grd" d="M2 72h116"/>';
 let uid=0;
 const ILL={
@@ -335,6 +338,7 @@ const ILL={
 };
 function svg(id){return `<svg class="ill" viewBox="0 0 120 80" aria-hidden="true">${ILL[id]()}</svg>`}
 document.querySelectorAll('[data-ill]').forEach(el=>{el.outerHTML=svg(el.dataset.ill)});
+document.querySelector('.flagpole').innerHTML=`<svg viewBox="0 0 45 30" aria-label="Štátna vlajka Slovenskej republiky">${FLAGBODY}</svg>`;
 
 /* ---------- data (overené podľa znenia účinného od 1. 11. 2025) ---------- */
 const C={leg:'var(--leg)',exe:'var(--exe)',jud:'var(--jud)',ctl:'var(--ctl)',sam:'var(--sam)',base:'var(--ink)'};
